@@ -7,11 +7,11 @@ workspace "rapidjson-learning"
 project "rapidjson-learning"
     kind "ConsoleApp"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++20"
     targetdir ("generated/" .. _ACTION .. "/bin/%{cfg.buildcfg}")
     objdir ("generated/" .. _ACTION .. "/obj/%{cfg.buildcfg}")
 
-    files { "src/**.h", "src/**.cpp" }  -- externals removed from here
+    files { "src/**.h", "src/**.hpp", "src/**.cpp" }
     includedirs { "src", "externals/rapidjson/include" }
 
     filter "configurations:Debug"

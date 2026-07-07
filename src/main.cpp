@@ -1,15 +1,16 @@
 #include <filesystem>
+#include <format>
 #include <fstream>
-#include <iostream>
 #include <vector>
 #include "rapidjson/document.h"
+#include "debugging/LogUtils.hpp"
 
 void LoadJSON(const wchar_t* i_path)
 {
     std::ifstream file(i_path, std::ios::binary);
     if (!file.is_open())
     {
-        std::wcout << L"File not opened: " << i_path << std::endl;
+        WLOG(LOG_WARN, L"File not opened: {}", i_path);
         return;
     }
 
@@ -22,7 +23,7 @@ void LoadJSON(const wchar_t* i_path)
 
     if (document.HasParseError())
     {
-        std::cout << "JSON parse error at offset: " << document.GetErrorOffset() << std::endl;
+        LOG(LOG_WARN, "JSON parse error at offset {}", document.GetErrorOffset());
     }
     delete[] buffer;
     file.close();
