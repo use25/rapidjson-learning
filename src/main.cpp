@@ -4,6 +4,7 @@
 #include <vector>
 #include "rapidjson/document.h"
 #include "debugging/LogUtils.hpp"
+#include "TestObject.h"
 
 void LoadJSON(const wchar_t* i_path)
 {
@@ -24,7 +25,45 @@ void LoadJSON(const wchar_t* i_path)
     if (document.HasParseError())
     {
         LOG(LOG_WARN, "JSON parse error at offset {}", document.GetErrorOffset());
+        delete[] buffer;
+        file.close();
+        return;
     }
+
+    if (!document.IsObject())
+    {
+        delete[] buffer;
+        file.close();
+        return;
+    }
+
+    // Querying document
+    TestObject obj{};
+    if (document.HasMember("hello") && document["hello"].IsString())
+    {
+        obj.m_hello = document["hello"].GetString();
+    }
+    if (document.HasMember("t") && document["t"].IsBool())
+    {
+        obj.m_t = document["t"].GetBool();
+    }
+    obj.m_f = document["f"].GetBool();
+    assert(document.HasMember("n") && document["n"].GetType() == rapidjson::Type::kNullType);
+    obj.m_n = 0;
+    obj.m_pi = document["pi"].GetFloat();
+    if (document.HasMember("a") && document["a"].IsArray())
+    {
+        auto a = document["a"].GetArray();
+        obj.m_a.reserve(a.Size());
+        for (rapidjson::Value::ConstValueIterator itr = a.Begin(); itr != a.End(); itr++)
+        {
+            if (itr->IsInt())
+            {
+                obj.m_a.push_back(itr->GetInt());
+            }
+        }
+    }
+
     delete[] buffer;
     file.close();
 }
