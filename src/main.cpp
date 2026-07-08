@@ -3,8 +3,56 @@
 #include <fstream>
 #include <vector>
 #include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
 #include "debugging/LogUtils.hpp"
 #include "TestObject.h"
+
+void SaveJSON(const wchar_t* i_path, rapidjson::Document& i_document)
+{
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    i_document.Accept(writer);
+
+    std::ofstream file(i_path, std::ios::trunc);
+    file.write(buffer.GetString(), buffer.GetSize());
+    file.close();
+}
+
+void WriteDefaultJSON()
+{
+    rapidjson::Document document;
+    document.SetObject();
+    rapidjson::Document::AllocatorType& a = document.GetAllocator();
+
+    {
+        rapidjson::Value array;
+        array.SetArray();
+        document.AddMember("created_a", array, a);
+    }
+    {
+        rapidjson::Value object;
+        object.SetObject();
+        document["created_a"].PushBack(object, a);
+    }
+    {
+        rapidjson::Value myBool;
+        myBool.SetBool(true);
+        document["created_a"][0].AddMember("t", myBool, a);
+    }
+    {
+        rapidjson::Value myString;
+        myString.SetString("const string test");
+        document["created_a"][0].AddMember("s", myString, a);
+    }
+    {
+        rapidjson::Value myDynamicString;
+        std::string rawString = "dynamic str testing";
+        myDynamicString.SetString(rawString.c_str(), static_cast<rapidjson::SizeType>(rawString.size()), a);
+        document["created_a"][0].AddMember("dynamic_s", myDynamicString, a);
+    }
+    SaveJSON(L"../../data/new.json", document);
+}
 
 void LoadJSON(const wchar_t* i_path)
 {
@@ -71,5 +119,6 @@ void LoadJSON(const wchar_t* i_path)
 int main()
 {
     LoadJSON(L"../../data/test.json");
+    WriteDefaultJSON();
     return 0;
 }
