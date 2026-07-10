@@ -6,6 +6,7 @@
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 #include "debugging/LogUtils.hpp"
+#include "CharBuffer.h"
 #include "TestObject.h"
 
 void SaveJSON(const wchar_t* i_path, rapidjson::Document& i_document)
@@ -51,7 +52,7 @@ void WriteDefaultJSON()
         myDynamicString.SetString(rawString.c_str(), static_cast<rapidjson::SizeType>(rawString.size()), a);
         document["created_a"][0].AddMember("dynamic_s", myDynamicString, a);
     }
-    SaveJSON(L"../../data/new.json", document);
+    SaveJSON(L"../../generated/data/new.json", document);
 }
 
 void LoadJSON(const wchar_t* i_path)
@@ -64,23 +65,21 @@ void LoadJSON(const wchar_t* i_path)
     }
 
     auto size = std::filesystem::file_size(i_path) + 1;
-    char* buffer = new char[size] {0};
-    file.read(buffer, size);
+    CharBuffer buffer(size);
+    file.read(buffer.data, size - 1);
 
     rapidjson::Document document;
-    document.Parse(buffer);
+    document.Parse(buffer.data);
 
     if (document.HasParseError())
     {
         LOG(LOG_WARN, "JSON parse error at offset {}", document.GetErrorOffset());
-        delete[] buffer;
         file.close();
         return;
     }
 
     if (!document.IsObject())
     {
-        delete[] buffer;
         file.close();
         return;
     }
@@ -95,10 +94,17 @@ void LoadJSON(const wchar_t* i_path)
     {
         obj.m_t = document["t"].GetBool();
     }
-    obj.m_f = document["f"].GetBool();
+    if (document.HasMember("f") && document["f"].IsBool())
+    {
+        obj.m_f = document["f"].GetBool();
+    }
     assert(document.HasMember("n") && document["n"].GetType() == rapidjson::Type::kNullType);
     obj.m_n = 0;
-    obj.m_pi = document["pi"].GetFloat();
+
+    if (document.HasMember("pi") && document["pi"].IsFloat())
+    {
+        obj.m_pi = document["pi"].GetFloat();
+    }
     if (document.HasMember("a") && document["a"].IsArray())
     {
         auto a = document["a"].GetArray();
@@ -112,7 +118,6 @@ void LoadJSON(const wchar_t* i_path)
         }
     }
 
-    delete[] buffer;
     file.close();
 }
 
