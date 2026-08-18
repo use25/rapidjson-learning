@@ -9,7 +9,7 @@
 #include "CharBuffer.h"
 #include "TestObject.h"
 
-void SaveJSON(const wchar_t* i_path, rapidjson::Document& i_document)
+void SaveJSON(const std::filesystem::path& i_path, rapidjson::Document& i_document)
 {
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
@@ -52,15 +52,15 @@ void WriteDefaultJSON()
         myDynamicString.SetString(rawString.c_str(), static_cast<rapidjson::SizeType>(rawString.size()), a);
         document["created_a"][0].AddMember("dynamic_s", myDynamicString, a);
     }
-    SaveJSON(L"../../generated/data/new.json", document);
+    SaveJSON("../../generated/data/new.json", document);
 }
 
-void LoadJSON(const wchar_t* i_path)
+void LoadJSON(const std::filesystem::path& i_path)
 {
     std::ifstream file(i_path, std::ios::binary);
     if (!file.is_open())
     {
-        WLOG(LOG_WARN, L"File not opened: {}", i_path);
+        LOG(LOG_WARN, "File not opened: {}", i_path.c_str());
         return;
     }
 
@@ -123,7 +123,8 @@ void LoadJSON(const wchar_t* i_path)
 
 int main()
 {
-    LoadJSON(L"../../data/test.json");
+    LoadJSON("data/test.json");
     WriteDefaultJSON();
+    LOG(LOG_INFO, "Reading completed.");
     return 0;
 }
